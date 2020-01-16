@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="edit_message">Ingrese un mensaje</string>
+    <string name="button_send">Enviar</string>
+</resources>
