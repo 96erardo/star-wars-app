@@ -54,13 +54,6 @@ public class MoviesListFragment extends ListFragment {
         });
     }
 
-//    @Override
-//    public void onSaveInstanceState(Bundle outState) {
-//        super.onSaveInstanceState(outState);
-//        System.out.println("onSaveInstanceState: " + curCheckPosition);
-//        outState.putInt("curChoice", curCheckPosition);
-//    }
-
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         model.selected = position;

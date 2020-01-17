@@ -9,17 +9,19 @@ import android.view.ViewGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.example.myfirstapp.R;
 import com.example.myfirstapp.view.MainActivity;
 import com.example.myfirstapp.view.model.MoviesListViewModel;
 
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.motion.widget.MotionLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 
 import org.w3c.dom.Text;
 
 public class DetailsFragment extends Fragment {
-    private final int TEXT_VIEW_ID = 1;
+    private MoviesListViewModel model;
 
     public static DetailsFragment newInstance (int index) {
         DetailsFragment f = new DetailsFragment();
@@ -49,33 +51,25 @@ public class DetailsFragment extends Fragment {
             return null;
         }
 
-        // Getting arguments when created
-        MoviesListViewModel model = ViewModelProviders.of(getActivity()).get(MoviesListViewModel.class);
+        return inflater.inflate(R.layout.deatils_activity, container, false);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        model = ViewModelProviders.of(getActivity()).get(MoviesListViewModel.class);
         int index = model.selected;
 
-        ScrollView scroller = new ScrollView(getActivity());
-        TextView text = new TextView(getActivity());
+        TextView text = getActivity().findViewById(R.id.openingCrawl);
         int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getActivity().getResources().getDisplayMetrics());
         text.setPadding(padding, padding, padding, padding);
         text.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
         text.setText(model.films.getValue().get(index).openingCrawl);
-        scroller.addView(text);
 
-        return scroller;
-    }
+        MotionLayout layout = getActivity().findViewById(R.id.motionLayout);
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        System.out.println("deatils onDestroy");
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-
-        System.out.println("details onDetach");
+        layout.transitionToEnd();
     }
 }
