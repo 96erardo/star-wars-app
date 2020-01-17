@@ -17,8 +17,6 @@ public class MoviesListViewModel extends AndroidViewModel {
 
     public LiveData<ArrayList<Film>> films = filmRepo.getFilms();
 
-    public LiveData<Boolean> fetched;
-
     public int selected = 0;
 
     public MoviesListViewModel(@NonNull Application application) {

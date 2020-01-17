@@ -50,9 +50,8 @@ public class DetailsFragment extends Fragment {
         }
 
         // Getting arguments when created
-        Bundle bundle = getArguments();
-        String description = bundle.getString(MainActivity.EXTRA_MESSAGE, null);
-        int index = bundle.getInt("index", -1);
+        MoviesListViewModel model = ViewModelProviders.of(getActivity()).get(MoviesListViewModel.class);
+        int index = model.selected;
 
         ScrollView scroller = new ScrollView(getActivity());
         TextView text = new TextView(getActivity());
@@ -60,15 +59,23 @@ public class DetailsFragment extends Fragment {
         text.setPadding(padding, padding, padding, padding);
         text.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
-        if (description != null) {
-            text.setText(description);
-        } else {
-            MoviesListViewModel model = ViewModelProviders.of(getActivity()).get(MoviesListViewModel.class);
-            text.setText(model.films.getValue().get(index).openingCrawl);
-        }
-
+        text.setText(model.films.getValue().get(index).openingCrawl);
         scroller.addView(text);
 
         return scroller;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        System.out.println("deatils onDestroy");
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+        System.out.println("details onDetach");
     }
 }
