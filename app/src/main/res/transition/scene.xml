@@ -5,7 +5,7 @@
     <Transition
         motion:constraintSetStart="@+id/start"
         motion:constraintSetEnd="@+id/end"
-        motion:duration="20000">
+        motion:duration="50000">
         <OnSwipe
             motion:touchAnchorId="@+id/openingCrawl"
             motion:touchAnchorSide="right"
