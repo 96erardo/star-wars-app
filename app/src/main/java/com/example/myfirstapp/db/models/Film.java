@@ -4,8 +4,10 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import java.sql.Timestamp;
+
 @Entity(tableName = "film")
-public class Film {
+public class Film implements Comparable<Film> {
     @PrimaryKey
     public int id;
 
@@ -16,10 +18,24 @@ public class Film {
     @ColumnInfo(name = "opening_crawl")
     public String openingCrawl;
 
+    @ColumnInfo(name = "last_modified", defaultValue = "CURRENT_TIMESTAMP")
+    public String lastModified;
+
     public Film (int id, int episode, String title, String openingCrawl) {
         this.id = id;
         this.episode = episode;
         this.title = title;
         this.openingCrawl = openingCrawl;
+    }
+
+    @Override
+    public int compareTo(Film f) {
+        if (this.episode > f.episode)
+            return 1;
+
+        if (this.episode < f.episode)
+            return -1;
+
+        return 0;
     }
 }

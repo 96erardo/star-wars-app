@@ -1,27 +1,46 @@
 package com.example.myfirstapp.view.model;
 
-import android.app.Application;
-
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.myfirstapp.dagger.scopes.ActivityScope;
 import com.example.myfirstapp.db.models.Film;
 import com.example.myfirstapp.repository.FilmRepository;
 
 import java.util.ArrayList;
 
-public class MoviesListViewModel extends AndroidViewModel {
-    public FilmRepository filmRepo = new FilmRepository(getApplication());
+import javax.inject.Inject;
 
-    public LiveData<ArrayList<Film>> films = filmRepo.getFilms();
+@ActivityScope
+public class MoviesListViewModel extends ViewModel {
+    @Inject
+    public FilmRepository filmRepo;
 
-    public LiveData<Boolean> fetched;
+    public LiveData<ArrayList<Film>> films;
+
+    public LiveData<Film> film;
 
     public int selected = 0;
 
-    public MoviesListViewModel(@NonNull Application application) {
-        super(application);
+    public void setFilmRepo (FilmRepository filmRepo) {
+        this.filmRepo = filmRepo;
+    }
+
+    public void fetchFilms () {
+        films = filmRepo.getFilms();
+    }
+
+    public void fetchFilm (int filmId) { film = filmRepo.getFilm(filmId); }
+
+    public Film findFilm (int filmId) {
+        ArrayList<Film> films = this.films.getValue();
+
+        for (Film film : films) {
+            if (film.id == filmId) {
+                return film;
+            }
+        }
+
+        return null;
     }
 }
