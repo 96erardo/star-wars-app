@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.myfirstapp.db.AppDatabase;
 import com.example.myfirstapp.db.dao.FilmDao;
+import com.example.myfirstapp.db.models.Cover;
 import com.example.myfirstapp.db.models.Film;
 import com.example.myfirstapp.http.WebService;
 import com.google.gson.JsonArray;
@@ -40,6 +41,12 @@ public class FilmRepository {
             @Override
             protected ArrayList<Film> doInBackground(Void... voids) {
                 ArrayList<Film> filmsAL = new ArrayList<Film>();
+
+                Cover covers[] = appDatabase.coverDao().getCovers();
+
+                for (Cover c : covers) {
+                    System.out.println("Episode " + c.episodeId + " url: " + c.url);
+                }
 
                 try {
                     Response<JsonObject> response = service.getFilms().execute();

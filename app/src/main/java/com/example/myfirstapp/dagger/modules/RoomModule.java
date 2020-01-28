@@ -20,6 +20,8 @@ public abstract class RoomModule {
             context,
             AppDatabase.class,
             "swapp_db"
-        ).build();
+        )
+        .createFromAsset("database/swapp.db")
+        .build();
     }
 }
