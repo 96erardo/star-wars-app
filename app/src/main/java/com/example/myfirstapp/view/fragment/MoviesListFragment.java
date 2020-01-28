@@ -1,10 +1,12 @@
 package com.example.myfirstapp.view.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.fragment.app.ListFragment;
 import androidx.lifecycle.Observer;
@@ -12,20 +14,33 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.Navigation;
 
 import com.example.myfirstapp.R;
+import com.example.myfirstapp.SwApplication;
 import com.example.myfirstapp.db.models.Film;
+import com.example.myfirstapp.view.MainActivity;
 import com.example.myfirstapp.view.model.MoviesListViewModel;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 public class MoviesListFragment extends ListFragment {
+    @Inject
+    public MoviesListViewModel model;
+
     boolean dualPane;
-    MoviesListViewModel model;
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+
+        ((MainActivity) getActivity()).moviesComponent.inject(this);
+    }
 
     @Override
     public void onActivityCreated (Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        model = ViewModelProviders.of(getActivity()).get(MoviesListViewModel.class);
+        model.fetchFilms();
 
         model.films.observe(this, new Observer<ArrayList<Film>>() {
             @Override
@@ -39,6 +54,7 @@ public class MoviesListFragment extends ListFragment {
                 }
 
                 setListAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_activated_1, titles));
+
                 View detailsFrame = getActivity().findViewById(R.id.detailAction);
                 dualPane = detailsFrame != null && detailsFrame.getVisibility() == View.VISIBLE;
 

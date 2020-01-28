@@ -7,7 +7,7 @@ import com.example.myfirstapp.dagger.DaggerApplicationGraph;
 import com.example.myfirstapp.dagger.modules.AppContextModule;
 
 public class SwApplication extends Application {
-    ApplicationGraph appComponent;
+    public ApplicationGraph appComponent;
 
     @Override
     public void onCreate() {

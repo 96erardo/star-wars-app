@@ -1,9 +1,5 @@
 package com.example.myfirstapp.view.model;
 
-import android.app.Application;
-
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 
@@ -12,14 +8,21 @@ import com.example.myfirstapp.repository.FilmRepository;
 
 import java.util.ArrayList;
 
-public class MoviesListViewModel extends AndroidViewModel {
-    public FilmRepository filmRepo = new FilmRepository(getApplication());
+import javax.inject.Inject;
 
-    public LiveData<ArrayList<Film>> films = filmRepo.getFilms();
+public class MoviesListViewModel extends ViewModel {
+    @Inject
+    public FilmRepository filmRepo;
+
+    public LiveData<ArrayList<Film>> films;
 
     public int selected = 0;
 
-    public MoviesListViewModel(@NonNull Application application) {
-        super(application);
+    public void setFilmRepo (FilmRepository filmRepo) {
+        this.filmRepo = filmRepo;
+    }
+
+    public void fetchFilms () {
+        films = filmRepo.getFilms();
     }
 }
