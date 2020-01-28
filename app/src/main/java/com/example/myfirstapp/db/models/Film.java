@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey;
 import java.sql.Timestamp;
 
 @Entity(tableName = "film")
-public class Film {
+public class Film implements Comparable<Film> {
     @PrimaryKey
     public int id;
 
@@ -26,5 +26,16 @@ public class Film {
         this.episode = episode;
         this.title = title;
         this.openingCrawl = openingCrawl;
+    }
+
+    @Override
+    public int compareTo(Film f) {
+        if (this.episode > f.episode)
+            return 1;
+
+        if (this.episode < f.episode)
+            return -1;
+
+        return 0;
     }
 }

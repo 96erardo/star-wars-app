@@ -9,17 +9,11 @@ import android.widget.ListView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.fragment.app.ListFragment;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.Navigation;
 
 import com.example.myfirstapp.R;
-import com.example.myfirstapp.SwApplication;
-import com.example.myfirstapp.db.models.Film;
 import com.example.myfirstapp.view.MainActivity;
 import com.example.myfirstapp.view.model.MoviesListViewModel;
-
-import java.util.ArrayList;
 
 import javax.inject.Inject;
 
@@ -42,37 +36,32 @@ public class MoviesListFragment extends ListFragment {
 
         model.fetchFilms();
 
-        model.films.observe(this, new Observer<ArrayList<Film>>() {
-            @Override
-            public void onChanged(ArrayList<Film> films) {
-                System.out.println("onChanged");
+        model.films.observe(this, films -> {
+            String titles[] = new String[films.size()];
 
-                String titles[] = new String[films.size()];
+            for (int i = 0; i < titles.length; i++) {
+                titles[i] = films.get(i).title;
+            }
 
-                for (int i = 0; i < titles.length; i++) {
-                    titles[i] = films.get(i).title;
-                }
+            setListAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_activated_1, titles));
 
-                setListAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_activated_1, titles));
+            View detailsFrame = getActivity().findViewById(R.id.detailAction);
+            dualPane = detailsFrame != null && detailsFrame.getVisibility() == View.VISIBLE;
 
-                View detailsFrame = getActivity().findViewById(R.id.detailAction);
-                dualPane = detailsFrame != null && detailsFrame.getVisibility() == View.VISIBLE;
+            System.out.println("dualPane: " + dualPane);
 
-                System.out.println("dualPane: " + dualPane);
-
-                if (dualPane) {
-                    // In dual-pane mode, the list view highlights the selected item.
-                    getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-                    // Make sure our UI is in the correct state.
-                    showDetails(model.selected);
-                }
+            if (dualPane) {
+                // In dual-pane mode, the list view highlights the selected item.
+                getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+                // Make sure our UI is in the correct state.
+                showDetails(model.selected);
             }
         });
     }
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        model.selected = position;
+        model.selected = model.films.getValue().get(position).id;
 
         if (dualPane) {
             showDetails(position);

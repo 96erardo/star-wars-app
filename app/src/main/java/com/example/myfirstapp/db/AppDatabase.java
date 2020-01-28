@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase;
 import com.example.myfirstapp.db.dao.FilmDao;
 import com.example.myfirstapp.db.models.Film;
 
-@Database(entities = {Film.class}, version = 1, exportSchema = false)
+@Database(entities = {Film.class}, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract FilmDao filmDao();
 
