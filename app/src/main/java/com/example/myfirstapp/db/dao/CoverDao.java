@@ -9,4 +9,7 @@ import com.example.myfirstapp.db.models.Cover;
 public interface CoverDao {
     @Query("SELECT * FROM cover")
     Cover[] getCovers ();
+
+    @Query ("SELECT * FROM cover WHERE id = :id")
+    Cover getCover (int id);
 }

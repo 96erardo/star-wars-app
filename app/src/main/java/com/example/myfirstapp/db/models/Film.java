@@ -2,6 +2,7 @@ package com.example.myfirstapp.db.models;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "film")
@@ -15,6 +16,9 @@ public class Film implements Comparable<Film> {
 
     @ColumnInfo(name = "opening_crawl")
     public String openingCrawl;
+
+    @Ignore
+    public String cover;
 
     @ColumnInfo(name = "last_modified", defaultValue = "CURRENT_TIMESTAMP")
     public String lastModified;

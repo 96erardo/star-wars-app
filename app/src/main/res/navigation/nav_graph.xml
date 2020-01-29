@@ -8,7 +8,8 @@
     <fragment
         android:id="@+id/moviesListFragment"
         android:name="com.example.myfirstapp.view.fragment.MoviesListFragment"
-        android:label="MoviesListFragment">
+        android:label="MoviesListFragment"
+        tools:layout="@layout/films_fragment">
         <action
             android:id="@+id/detailAction"
             app:destination="@id/detailsFragment"

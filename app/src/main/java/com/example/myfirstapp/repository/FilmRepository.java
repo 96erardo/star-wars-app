@@ -53,6 +53,17 @@ public class FilmRepository {
 
                     if (response.isSuccessful()) {
                         filmsAL = getFilmsFromJsonArray((JsonArray) response.body().get("results"));
+
+                        for (int i = 0; i < filmsAL.size(); i++) {
+                            Film film = filmsAL.get(i);
+                            Cover cover = appDatabase.coverDao().getCover(film.episode);
+                            if (cover != null) {
+                                film.cover = cover.url;
+                            }
+
+                            filmsAL.set(i, film);
+                        }
+
                         Collections.sort(filmsAL);
 
                         return filmsAL;
