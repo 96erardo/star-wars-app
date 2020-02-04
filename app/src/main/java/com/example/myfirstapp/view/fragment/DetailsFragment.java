@@ -25,21 +25,6 @@ public class DetailsFragment extends Fragment {
     @Inject
     MoviesListViewModel model;
 
-    public static DetailsFragment newInstance (int index) {
-        DetailsFragment f = new DetailsFragment();
-
-        // Supply index input as an argument.
-        Bundle args = new Bundle();
-        args.putInt("index", index);
-        f.setArguments(args);
-
-        return f;
-    }
-
-    public int getShownIndex() {
-        return getArguments().getInt("index", 0);
-    }
-
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
@@ -60,7 +45,8 @@ public class DetailsFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        model.fetchFilm(model.selected);
+        int filmId = DetailsFragmentArgs.fromBundle(getArguments()).getFilmId();
+        model.fetchFilm(filmId);
 
         model.film.observe(this, film -> {
             if (film != null) {

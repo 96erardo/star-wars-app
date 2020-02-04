@@ -9,10 +9,14 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.myfirstapp.R;
+import com.example.myfirstapp.db.models.Film;
+import com.example.myfirstapp.view.interfaces.ItemClickListener;
 import com.squareup.picasso.Picasso;
 
 public class FilmGridAdapter extends RecyclerView.Adapter {
-    private String[] dataSet;
+    private Film[] dataSet;
+    private ItemClickListener clickListener;
+
     public static class FilmViewHolder extends RecyclerView.ViewHolder {
         public CardView cardView;
         public ImageView imageView;
@@ -23,10 +27,24 @@ public class FilmGridAdapter extends RecyclerView.Adapter {
             this.cardView = c;
             this.imageView = cardView.findViewById(R.id.movie_cover);
         }
+
+        public void bind (Film film, ItemClickListener itemClickListener) {
+            this.imageView.setContentDescription("SW Episode " + film.episode + " cover");
+            Picasso.get().load(film.cover).into(this.imageView);
+
+            cardView.setOnClickListener(v -> {
+                itemClickListener.onItemClicked(film.id);
+            });
+        }
     }
 
-    public FilmGridAdapter (String[] titles) {
-        dataSet = titles;
+    public FilmGridAdapter (Film[] films, ItemClickListener itemClickListener) {
+        dataSet = films;
+        clickListener = itemClickListener;
+    }
+
+    public void setDataSet (Film[] films) {
+        dataSet = films;
     }
 
     @NonNull
@@ -43,9 +61,10 @@ public class FilmGridAdapter extends RecyclerView.Adapter {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         FilmViewHolder vh = (FilmViewHolder) holder;
 
-        vh.imageView.setContentDescription("SW Episode " + (position + 1) + " cover");
-        Picasso.get().load(dataSet[position]).into(vh.imageView);
+        vh.bind(dataSet[position], clickListener);
     }
+
+
 
     @Override
     public int getItemCount() {

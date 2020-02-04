@@ -10,6 +10,6 @@ public interface CoverDao {
     @Query("SELECT * FROM cover")
     Cover[] getCovers ();
 
-    @Query ("SELECT * FROM cover WHERE id = :id")
-    Cover getCover (int id);
+    @Query ("SELECT * FROM cover WHERE episode_id = :episode")
+    Cover getCover (int episode);
 }

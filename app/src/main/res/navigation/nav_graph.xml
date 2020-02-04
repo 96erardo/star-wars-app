@@ -24,7 +24,7 @@
         android:label="DetailsFragment"
         tools:layout="@layout/deatils_activity">
         <argument
-            android:name="index"
+            android:name="filmId"
             android:defaultValue="0"
             app:argType="integer" />
     </fragment>

@@ -40,4 +40,15 @@ public class Film implements Comparable<Film> {
 
         return 0;
     }
+
+    @Override
+    public String toString() {
+        return "Film{" +
+                "id=" + id +
+                ", episode=" + episode +
+                ", title='" + title + '\'' +
+                ", cover='" + cover + '\'' +
+                ", lastModified='" + lastModified + '\'' +
+                '}';
+    }
 }
