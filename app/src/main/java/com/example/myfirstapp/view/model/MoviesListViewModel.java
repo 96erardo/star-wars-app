@@ -20,8 +20,6 @@ public class MoviesListViewModel extends ViewModel {
 
     public LiveData<Film> film;
 
-    public int selected = 0;
-
     public void setFilmRepo (FilmRepository filmRepo) {
         this.filmRepo = filmRepo;
     }

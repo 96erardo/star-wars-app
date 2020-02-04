@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.myfirstapp.db.AppDatabase;
 import com.example.myfirstapp.db.dao.FilmDao;
+import com.example.myfirstapp.db.models.Cover;
 import com.example.myfirstapp.db.models.Film;
 import com.example.myfirstapp.http.WebService;
 import com.google.gson.JsonArray;
@@ -41,11 +42,25 @@ public class FilmRepository {
             protected ArrayList<Film> doInBackground(Void... voids) {
                 ArrayList<Film> filmsAL = new ArrayList<Film>();
 
+                Cover covers[] = appDatabase.coverDao().getCovers();
+
                 try {
                     Response<JsonObject> response = service.getFilms().execute();
 
                     if (response.isSuccessful()) {
                         filmsAL = getFilmsFromJsonArray((JsonArray) response.body().get("results"));
+
+                        for (int i = 0; i < filmsAL.size(); i++) {
+                            Film film = filmsAL.get(i);
+                            Cover cover = appDatabase.coverDao().getCover(film.episode);
+
+                            if (cover != null) {
+                                film.cover = cover.url;
+                            }
+
+                            filmsAL.set(i, film);
+                        }
+
                         Collections.sort(filmsAL);
 
                         return filmsAL;
@@ -82,17 +97,14 @@ public class FilmRepository {
                 FilmDao filmDao = appDatabase.filmDao();
                 Film film = filmDao.getFilm(integers[0]);
 
-                System.out.println("FILM " + film);
-
                 if (film != null) {
-                    System.out.println(film);
                     return film;
                 }
 
                 try {
 
                     Response<JsonObject> response = service.getFilm(integers[0]).execute();
-                    film = getFilmFromJsonObject(response.body(), integers[0]);
+                    film = getFilmFromJsonObject(response.body());
                     filmDao.insertFilm(film);
 
                     return film;
@@ -118,12 +130,15 @@ public class FilmRepository {
         ArrayList<Film> films = new ArrayList<Film>();
 
         for (int i = 0; i < array.size(); i++)
-            films.add(getFilmFromJsonObject(array.get(i).getAsJsonObject(), i + 1));
+            films.add(getFilmFromJsonObject(array.get(i).getAsJsonObject()));
 
         return films;
     }
 
-    private Film getFilmFromJsonObject (JsonObject object, int filmId) {
+    private Film getFilmFromJsonObject (JsonObject object) {
+        String[] urlPieces = object.get("url").getAsString().split("/");
+        int filmId = Integer.parseInt(urlPieces[urlPieces.length - 1]);
+
         return new Film(
             filmId,
             object.get("episode_id").getAsInt(),

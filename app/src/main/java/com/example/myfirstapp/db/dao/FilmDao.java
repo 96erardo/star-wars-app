@@ -16,7 +16,7 @@ public interface FilmDao {
     @Query("SELECT COUNT(*) FROM film WHERE id = :filmId AND (last_modified + :day) > CURRENT_TIMESTAMP")
     int filmExists (int filmId, long day);
 
-    @Query("SELECT * FROM film ORDER BY episode ASC")
+    @Query("SELECT film.*, cover.url as cover FROM film INNER JOIN cover ON cover.episode_id = film.episode ORDER BY episode ASC")
     Film[] getFilms();
 
     @Insert

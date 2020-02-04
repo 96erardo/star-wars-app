@@ -2,24 +2,38 @@ package com.example.myfirstapp.view.fragment;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.fragment.app.ListFragment;
-import androidx.navigation.Navigation;
+import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.myfirstapp.R;
+import com.example.myfirstapp.db.models.Film;
 import com.example.myfirstapp.view.MainActivity;
+import com.example.myfirstapp.view.adapters.FilmGridAdapter;
+import com.example.myfirstapp.view.interfaces.ItemClickListener;
 import com.example.myfirstapp.view.model.MoviesListViewModel;
+
+import java.io.FileDescriptor;
+import java.io.PrintWriter;
 
 import javax.inject.Inject;
 
-public class MoviesListFragment extends ListFragment {
+public class MoviesListFragment extends Fragment implements ItemClickListener {
     @Inject
     public MoviesListViewModel model;
+
+    ConstraintLayout constraintLayout;
+    RecyclerView recyclerView;
+    FilmGridAdapter adapter;
+    RecyclerView.LayoutManager layoutManager;
 
     boolean dualPane;
 
@@ -30,6 +44,21 @@ public class MoviesListFragment extends ListFragment {
         ((MainActivity) getActivity()).moviesComponent.inject(this);
     }
 
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        constraintLayout =  (ConstraintLayout) inflater.inflate(R.layout.films_fragment, container, false);
+        recyclerView = constraintLayout.findViewById(R.id.recycler_view);
+
+        layoutManager = new GridLayoutManager(getContext(), 2);
+        recyclerView.setLayoutManager(layoutManager);
+
+        adapter = new FilmGridAdapter(new Film[]{}, this);
+        recyclerView.setAdapter(adapter);
+
+        return constraintLayout;
+    }
+
     @Override
     public void onActivityCreated (Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -37,53 +66,21 @@ public class MoviesListFragment extends ListFragment {
         model.fetchFilms();
 
         model.films.observe(this, films -> {
-            String titles[] = new String[films.size()];
+            constraintLayout.removeView(constraintLayout.getViewById(R.id.progressBar3));
 
-            for (int i = 0; i < titles.length; i++) {
-                titles[i] = films.get(i).title;
-            }
-
-            setListAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_activated_1, titles));
-
-            View detailsFrame = getActivity().findViewById(R.id.detailAction);
-            dualPane = detailsFrame != null && detailsFrame.getVisibility() == View.VISIBLE;
-
-            System.out.println("dualPane: " + dualPane);
-
-            if (dualPane) {
-                // In dual-pane mode, the list view highlights the selected item.
-                getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-                // Make sure our UI is in the correct state.
-                showDetails(model.selected);
-            }
+            adapter.setDataSet(films.toArray(new Film[films.size()]));
+            adapter.notifyDataSetChanged();
         });
     }
 
     @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        model.selected = model.films.getValue().get(position).id;
-
-        if (dualPane) {
-            showDetails(position);
-        } else {
-            MoviesListFragmentDirections.DetailAction action = MoviesListFragmentDirections.detailAction();
-            action.setIndex(position);
-            Navigation.findNavController(v).navigate(action);
-        }
+    public void onItemClicked (int itemId) {
+        MoviesListFragmentDirections.DetailAction action = MoviesListFragmentDirections.detailAction().setFilmId(itemId);
+        NavHostFragment.findNavController(this).navigate(action);
     }
 
-    void showDetails(int index) {
-        getListView().setItemChecked(index, true);
-
-        DetailsFragment details = (DetailsFragment) getFragmentManager().findFragmentById(R.id.detailAction);
-
-        if (details == null || details.getShownIndex() != index) {
-            details = DetailsFragment.newInstance(index);
-
-            FragmentTransaction ft = getFragmentManager().beginTransaction();
-            ft.replace(R.id.detailAction, details);
-            ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-            ft.commit();
-        }
+    @Override
+    public void dump(@NonNull String prefix, @Nullable FileDescriptor fd, @NonNull PrintWriter writer, @Nullable String[] args) {
+        super.dump(prefix, fd, writer, args);
     }
 }
