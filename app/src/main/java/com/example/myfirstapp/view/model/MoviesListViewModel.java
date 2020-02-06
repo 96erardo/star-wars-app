@@ -18,10 +18,14 @@ public class MoviesListViewModel extends ViewModel {
 
     public LiveData<ArrayList<Film>> films;
 
+    public LiveData<Boolean> fetchingFilmsError;
+
     public LiveData<Film> film;
 
     public void setFilmRepo (FilmRepository filmRepo) {
         this.filmRepo = filmRepo;
+        this.fetchingFilmsError = filmRepo.fetchingFilmsError;
+        this.films = filmRepo.data;
     }
 
     public void fetchFilms () {
@@ -29,16 +33,4 @@ public class MoviesListViewModel extends ViewModel {
     }
 
     public void fetchFilm (int filmId) { film = filmRepo.getFilm(filmId); }
-
-    public Film findFilm (int filmId) {
-        ArrayList<Film> films = this.films.getValue();
-
-        for (Film film : films) {
-            if (film.id == filmId) {
-                return film;
-            }
-        }
-
-        return null;
-    }
 }
