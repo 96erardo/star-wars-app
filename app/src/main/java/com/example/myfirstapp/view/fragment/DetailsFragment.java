@@ -1,6 +1,7 @@
 package com.example.myfirstapp.view.fragment;
 
 import android.content.Context;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -17,13 +18,18 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.motion.widget.MotionLayout;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProviders;
 
 import javax.inject.Inject;
 
 public class DetailsFragment extends Fragment {
     @Inject
     MoviesListViewModel model;
+
+    MediaPlayer mediaPlayer = null;
+
+    PlaybackCompleted playbackCompleted = new PlaybackCompleted();
+
+    int playerPosition = 0;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -46,6 +52,8 @@ public class DetailsFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         int filmId = DetailsFragmentArgs.fromBundle(getArguments()).getFilmId();
+        mediaPlayer = MediaPlayer.create(getContext(), R.raw.sw_intro);
+        mediaPlayer.setOnSeekCompleteListener(playbackCompleted);
         model.fetchFilm(filmId);
 
         model.film.observe(this, film -> {
@@ -55,6 +63,7 @@ public class DetailsFragment extends Fragment {
 
                 layout.removeView(progressBar);
 
+                mediaPlayer.start();
                 TextView text = layout.findViewById(R.id.openingCrawl);
 
                 int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getActivity().getResources().getDisplayMetrics());
@@ -66,6 +75,37 @@ public class DetailsFragment extends Fragment {
                 layout.transitionToEnd();
             }
         });
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (playerPosition != 0) {
+            mediaPlayer = MediaPlayer.create(getContext(), R.raw.sw_intro);
+            mediaPlayer.seekTo(playerPosition);
+            mediaPlayer.setOnSeekCompleteListener(playbackCompleted);
+            mediaPlayer.start();
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        playerPosition = mediaPlayer.getCurrentPosition();
+        mediaPlayer.release();
+        mediaPlayer = null;
+    }
+
+    private class PlaybackCompleted implements MediaPlayer.OnSeekCompleteListener {
+
+        @Override
+        public void onSeekComplete(MediaPlayer mp) {
+            System.out.println("onSeekComplete");
+            playerPosition = 0;
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
     }
 }
