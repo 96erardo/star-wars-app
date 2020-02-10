@@ -7,10 +7,11 @@
     android:layout_height="wrap_content"
     android:layout_marginEnd="8dp"
     android:layout_marginBottom="8dp">
+
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:background="#00ff00"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent">
 
         <ImageView
             android:id="@+id/movie_cover"

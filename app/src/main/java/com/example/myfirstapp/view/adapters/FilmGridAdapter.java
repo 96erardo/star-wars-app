@@ -30,7 +30,11 @@ public class FilmGridAdapter extends RecyclerView.Adapter {
 
         public void bind (Film film, ItemClickListener itemClickListener) {
             this.imageView.setContentDescription("SW Episode " + film.episode + " cover");
-            Picasso.get().load(film.cover).into(this.imageView);
+            Picasso.get()
+                    .load(film.cover)
+                    .placeholder(R.drawable.placeholder)
+                    .error(R.drawable.fallback)
+                    .into(this.imageView);
 
             cardView.setOnClickListener(v -> {
                 itemClickListener.onItemClicked(film.id);
