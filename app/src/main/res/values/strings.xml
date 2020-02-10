@@ -5,6 +5,7 @@
     <string name="network_error_message" translatable="false">I find your lack of faith disturbing...</string>
     <string name="dv_helmet_image">Darth Vader\'s helmet</string>
     <string name="retry">Retry</string>
+    <string name="opening" translatable="false">A long time ago in a galaxy far, far away....</string>
 
     <!-- TODO: Remove or change this placeholder text -->
 </resources>

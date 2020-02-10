@@ -7,7 +7,6 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.myfirstapp.R;
@@ -26,8 +25,6 @@ public class DetailsFragment extends Fragment {
     MoviesListViewModel model;
 
     MediaPlayer mediaPlayer = null;
-
-    PlaybackCompleted playbackCompleted = new PlaybackCompleted();
 
     int playerPosition = 0;
 
@@ -53,17 +50,22 @@ public class DetailsFragment extends Fragment {
 
         int filmId = DetailsFragmentArgs.fromBundle(getArguments()).getFilmId();
         mediaPlayer = MediaPlayer.create(getContext(), R.raw.sw_intro);
-        mediaPlayer.setOnSeekCompleteListener(playbackCompleted);
+        mediaPlayer.setOnCompletionListener(mp -> {
+            mediaPlayer.release();
+            mediaPlayer = null;
+
+            getFragmentManager().popBackStack();
+        });
         model.fetchFilm(filmId);
 
         model.film.observe(this, film -> {
             if (film != null) {
                 MotionLayout layout = (MotionLayout) getView();
-                ProgressBar progressBar = layout.findViewById(R.id.progressBar);
+                TextView opening = layout.findViewById(R.id.opening);
 
-                layout.removeView(progressBar);
 
                 mediaPlayer.start();
+                layout.removeView(opening);
                 TextView text = layout.findViewById(R.id.openingCrawl);
 
                 int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getActivity().getResources().getDisplayMetrics());
@@ -84,7 +86,13 @@ public class DetailsFragment extends Fragment {
         if (playerPosition != 0) {
             mediaPlayer = MediaPlayer.create(getContext(), R.raw.sw_intro);
             mediaPlayer.seekTo(playerPosition);
-            mediaPlayer.setOnSeekCompleteListener(playbackCompleted);
+            mediaPlayer.setOnCompletionListener(mp -> {
+                mediaPlayer.release();
+                mediaPlayer = null;
+
+                getFragmentManager().popBackStack();
+            });
+
             mediaPlayer.start();
         }
     }
@@ -93,17 +101,8 @@ public class DetailsFragment extends Fragment {
     public void onStop() {
         super.onStop();
 
-        playerPosition = mediaPlayer.getCurrentPosition();
-        mediaPlayer.release();
-        mediaPlayer = null;
-    }
-
-    private class PlaybackCompleted implements MediaPlayer.OnSeekCompleteListener {
-
-        @Override
-        public void onSeekComplete(MediaPlayer mp) {
-            System.out.println("onSeekComplete");
-            playerPosition = 0;
+        if (mediaPlayer != null) {
+            playerPosition = mediaPlayer.getCurrentPosition();
             mediaPlayer.release();
             mediaPlayer = null;
         }
