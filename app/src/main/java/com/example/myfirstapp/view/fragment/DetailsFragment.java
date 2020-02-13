@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.constraintlayout.motion.widget.MotionLayout;
 import androidx.constraintlayout.motion.widget.MotionScene;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 
 import javax.inject.Inject;
 
@@ -61,7 +62,7 @@ public class DetailsFragment extends Fragment {
             mediaPlayer.release();
             mediaPlayer = null;
 
-            getFragmentManager().popBackStack();
+            NavHostFragment.findNavController(this).popBackStack();
         });
         model.fetchFilm(filmId);
 
@@ -95,7 +96,6 @@ public class DetailsFragment extends Fragment {
 
                     @Override
                     public void onTransitionCompleted(MotionLayout motionLayout, int i) {
-                        System.out.println("TRANSITION COMPLETED");
                         spaceView.startAnimation();
                     }
                 });
@@ -118,7 +118,7 @@ public class DetailsFragment extends Fragment {
                 mediaPlayer.release();
                 mediaPlayer = null;
 
-                getFragmentManager().popBackStack();
+                NavHostFragment.findNavController(this).popBackStack();
             });
 
             mediaPlayer.start();
