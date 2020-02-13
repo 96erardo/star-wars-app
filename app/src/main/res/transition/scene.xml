@@ -6,11 +6,6 @@
         motion:constraintSetStart="@+id/start"
         motion:constraintSetEnd="@+id/end"
         motion:duration="80000">
-        <OnSwipe
-            motion:touchAnchorId="@+id/openingCrawl"
-            motion:touchAnchorSide="right"
-            motion:dragDirection="dragDown"
-            />
     </Transition>
 
     <ConstraintSet android:id="@+id/start">
