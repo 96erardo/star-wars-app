@@ -28,6 +28,9 @@ public class FilmRepository {
 
     public AppDatabase appDatabase;
 
+    public MutableLiveData<Boolean> fetchingFilmsError = new MutableLiveData<Boolean>();
+    public MutableLiveData<ArrayList<Film>> data = new MutableLiveData<>();
+
     @Inject
     public FilmRepository (AppDatabase appDatabase, WebService service) {
         this.appDatabase = appDatabase;
@@ -35,7 +38,7 @@ public class FilmRepository {
     }
 
     public LiveData<ArrayList<Film>> getFilms () {
-        final MutableLiveData<ArrayList<Film>> data = new MutableLiveData<ArrayList<Film>>();
+        fetchingFilmsError.setValue(false);
 
         new AsyncTask<Void, Void, ArrayList<Film>> () {
             @Override
@@ -64,24 +67,28 @@ public class FilmRepository {
                         Collections.sort(filmsAL);
 
                         return filmsAL;
+                    } else {
+
+                        System.out.println("Response was not successful");
+
+                        return null;
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    Film films[] = appDatabase.filmDao().getFilms();
+                    System.out.println(e.getMessage());
 
-                    for (Film film : films) {
-                        filmsAL.add(film);
-                    }
+                    return null;
                 }
-
-                return filmsAL;
             }
 
             @Override
             protected void onPostExecute(ArrayList<Film> films) {
                 super.onPostExecute(films);
 
-                data.setValue(films);
+                if (films != null) {
+                    data.setValue(films);
+                } else {
+                    fetchingFilmsError.setValue(true);
+                }
             }
         }.execute();
 

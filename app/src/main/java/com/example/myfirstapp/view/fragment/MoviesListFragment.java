@@ -11,8 +11,8 @@ import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.example.myfirstapp.R;
 import com.example.myfirstapp.db.models.Film;
@@ -50,7 +50,7 @@ public class MoviesListFragment extends Fragment implements ItemClickListener {
         constraintLayout =  (ConstraintLayout) inflater.inflate(R.layout.films_fragment, container, false);
         recyclerView = constraintLayout.findViewById(R.id.recycler_view);
 
-        layoutManager = new GridLayoutManager(getContext(), 2);
+        layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
 
         adapter = new FilmGridAdapter(new Film[]{}, this);
@@ -70,6 +70,20 @@ public class MoviesListFragment extends Fragment implements ItemClickListener {
 
             adapter.setDataSet(films.toArray(new Film[films.size()]));
             adapter.notifyDataSetChanged();
+        });
+
+        model.fetchingFilmsError.observe(this, error -> {
+            if (error == true) {
+                constraintLayout.getViewById(R.id.progressBar3).setVisibility(View.GONE);
+                constraintLayout.getViewById(R.id.error_screen).setVisibility(View.VISIBLE);
+            }
+        });
+
+        constraintLayout.getViewById(R.id.error_screen).getRootView().findViewById(R.id.retry_button).setOnClickListener(v -> {
+            constraintLayout.getViewById(R.id.error_screen).setVisibility(View.GONE);
+            constraintLayout.getViewById(R.id.progressBar3).setVisibility(View.VISIBLE);
+
+            model.fetchFilms();
         });
     }
 
