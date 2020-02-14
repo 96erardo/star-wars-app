@@ -1,83 +1,156 @@
 package com.example.myfirstapp.repository;
 
-import android.content.Context;
+import android.os.AsyncTask;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.myfirstapp.db.AppDatabase;
 import com.example.myfirstapp.db.dao.FilmDao;
+import com.example.myfirstapp.db.models.Cover;
 import com.example.myfirstapp.db.models.Film;
-import com.example.myfirstapp.http.FilmsService;
+import com.example.myfirstapp.http.WebService;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.concurrent.Executor;
+import java.util.Collections;
 
-import retrofit2.Call;
-import retrofit2.Callback;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
+@Singleton
 public class FilmRepository {
-    private FilmsService service = new Retrofit.Builder()
-            .baseUrl("https://swapi.co/api/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(FilmsService.class);
+    private WebService service;
 
-    private Context context;
+    public AppDatabase appDatabase;
 
-    public FilmRepository (Context context) {
-        this.context = context;
+    public MutableLiveData<Boolean> fetchingFilmsError = new MutableLiveData<Boolean>();
+    public MutableLiveData<ArrayList<Film>> data = new MutableLiveData<>();
+
+    @Inject
+    public FilmRepository (AppDatabase appDatabase, WebService service) {
+        this.appDatabase = appDatabase;
+        this.service = service;
     }
 
     public LiveData<ArrayList<Film>> getFilms () {
-        final MutableLiveData<ArrayList<Film>> data = new MutableLiveData<ArrayList<Film>>();
+        fetchingFilmsError.setValue(false);
 
-        // In case i need local database
-        AppDatabase db = AppDatabase.getInstance(context);
-        FilmDao filmDao = db.filmDao();
-
-        service.getFilms().enqueue(new Callback<JsonObject>() {
+        new AsyncTask<Void, Void, ArrayList<Film>> () {
             @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                if (response.isSuccessful()) {
-                    JsonObject body = response.body();
-                    JsonArray results = (JsonArray) body.get("results");
-                    ArrayList<Film> films = new ArrayList<Film>();
+            protected ArrayList<Film> doInBackground(Void... voids) {
+                ArrayList<Film> filmsAL = new ArrayList<Film>();
 
-                    for (JsonElement result : results) {
-                        JsonObject film = result.getAsJsonObject();
+                Cover covers[] = appDatabase.coverDao().getCovers();
 
-                        films.add(new Film(
-                            film.get("episode_id").getAsInt(),
-                            film.get("episode_id").getAsInt(),
-                            film.get("title").getAsString(),
-                            film.get("opening_crawl").getAsString()
-                        ));
+                try {
+                    Response<JsonObject> response = service.getFilms().execute();
+
+                    if (response.isSuccessful()) {
+                        filmsAL = getFilmsFromJsonArray((JsonArray) response.body().get("results"));
+
+                        for (int i = 0; i < filmsAL.size(); i++) {
+                            Film film = filmsAL.get(i);
+                            Cover cover = appDatabase.coverDao().getCover(film.episode);
+
+                            if (cover != null) {
+                                film.cover = cover.url;
+                            }
+
+                            filmsAL.set(i, film);
+                        }
+
+                        Collections.sort(filmsAL);
+
+                        return filmsAL;
+                    } else {
+
+                        System.out.println("Response was not successful");
+
+                        return null;
                     }
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
 
-
-                    data.setValue(films);
+                    return null;
                 }
             }
 
             @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                System.out.println("result " +  t.getMessage());
+            protected void onPostExecute(ArrayList<Film> films) {
+                super.onPostExecute(films);
+
+                if (films != null) {
+                    data.setValue(films);
+                } else {
+                    fetchingFilmsError.setValue(true);
+                }
             }
-        });
+        }.execute();
 
         return data;
+    }
+
+    public LiveData<Film> getFilm (int filmId) {
+        final MutableLiveData<Film> film = new MutableLiveData<Film>();
+
+        new AsyncTask<Integer, Void, Film> () {
+            @Override
+            protected Film doInBackground(Integer... integers) {
+                FilmDao filmDao = appDatabase.filmDao();
+                Film film = filmDao.getFilm(integers[0]);
+
+                if (film != null) {
+                    return film;
+                }
+
+                try {
+
+                    Response<JsonObject> response = service.getFilm(integers[0]).execute();
+                    film = getFilmFromJsonObject(response.body());
+                    filmDao.insertFilm(film);
+
+                    return film;
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(Film filmRes) {
+                super.onPostExecute(filmRes);
+
+                film.setValue(filmRes);
+            }
+        }.execute(filmId);
+
+        return film;
+    }
+
+    private ArrayList<Film> getFilmsFromJsonArray (JsonArray array) {
+        ArrayList<Film> films = new ArrayList<Film>();
+
+        for (int i = 0; i < array.size(); i++)
+            films.add(getFilmFromJsonObject(array.get(i).getAsJsonObject()));
+
+        return films;
+    }
+
+    private Film getFilmFromJsonObject (JsonObject object) {
+        String[] urlPieces = object.get("url").getAsString().split("/");
+        int filmId = Integer.parseInt(urlPieces[urlPieces.length - 1]);
+
+        return new Film(
+            filmId,
+            object.get("episode_id").getAsInt(),
+            object.get("title").getAsString(),
+            object.get("opening_crawl").getAsString()
+        );
     }
 }

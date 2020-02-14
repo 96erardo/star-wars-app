@@ -1,116 +1,100 @@
 package com.example.myfirstapp.view.fragment;
 
-import android.content.Intent;
+import android.content.Context;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.view.ViewGroup;
 
-import androidx.fragment.app.FragmentTransaction;
-import androidx.fragment.app.ListFragment;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.example.myfirstapp.R;
 import com.example.myfirstapp.db.models.Film;
-import com.example.myfirstapp.view.DisplayMessageActivity;
 import com.example.myfirstapp.view.MainActivity;
-import com.example.myfirstapp.view.fragment.DetailsFragment;
+import com.example.myfirstapp.view.adapters.FilmGridAdapter;
+import com.example.myfirstapp.view.interfaces.ItemClickListener;
 import com.example.myfirstapp.view.model.MoviesListViewModel;
 
-import java.util.ArrayList;
+import java.io.FileDescriptor;
+import java.io.PrintWriter;
 
-public class MoviesListFragment extends ListFragment {
+import javax.inject.Inject;
+
+public class MoviesListFragment extends Fragment implements ItemClickListener {
+    @Inject
+    public MoviesListViewModel model;
+
+    ConstraintLayout constraintLayout;
+    RecyclerView recyclerView;
+    FilmGridAdapter adapter;
+    RecyclerView.LayoutManager layoutManager;
+
     boolean dualPane;
-    int curCheckPosition = 0;
-    MoviesListViewModel model;
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+
+        ((MainActivity) getActivity()).moviesComponent.inject(this);
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        constraintLayout =  (ConstraintLayout) inflater.inflate(R.layout.films_fragment, container, false);
+        recyclerView = constraintLayout.findViewById(R.id.recycler_view);
+
+        layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        recyclerView.setLayoutManager(layoutManager);
+
+        adapter = new FilmGridAdapter(new Film[]{}, this);
+        recyclerView.setAdapter(adapter);
+
+        return constraintLayout;
+    }
 
     @Override
     public void onActivityCreated (Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        model = ViewModelProviders.of(getActivity()).get(MoviesListViewModel.class);
+        model.fetchFilms();
 
-        model.films.observe(this, new Observer<ArrayList<Film>>() {
-            @Override
-            public void onChanged(ArrayList<Film> films) {
-                String titles[] = new String[films.size()];
+        model.films.observe(this, films -> {
+            constraintLayout.removeView(constraintLayout.getViewById(R.id.progressBar3));
 
-                for (int i = 0; i < titles.length; i++) {
-                    titles[i] = films.get(i).title;
-                }
+            adapter.setDataSet(films.toArray(new Film[films.size()]));
+            adapter.notifyDataSetChanged();
+        });
 
-                setListAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_activated_1, titles));
-                System.out.println("1");
-                View detailsFrame = getActivity().findViewById(R.id.details);
-                System.out.println("1");
-                dualPane = detailsFrame != null && detailsFrame.getVisibility() == View.VISIBLE;
-
-                if (savedInstanceState != null) {
-                    curCheckPosition = savedInstanceState.getInt("curChoice", 0);
-                }
-
-                if (dualPane) {
-                    // In dual-pane mode, the list view highlights the selected item.
-                    getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-                    // Make sure our UI is in the correct state.
-                    showDetails(curCheckPosition);
-                }
+        model.fetchingFilmsError.observe(this, error -> {
+            if (error == true) {
+                constraintLayout.getViewById(R.id.progressBar3).setVisibility(View.GONE);
+                constraintLayout.getViewById(R.id.error_screen).setVisibility(View.VISIBLE);
             }
+        });
+
+        constraintLayout.getViewById(R.id.error_screen).getRootView().findViewById(R.id.retry_button).setOnClickListener(v -> {
+            constraintLayout.getViewById(R.id.error_screen).setVisibility(View.GONE);
+            constraintLayout.getViewById(R.id.progressBar3).setVisibility(View.VISIBLE);
+
+            model.fetchFilms();
         });
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt("curChoice", curCheckPosition);
+    public void onItemClicked (int itemId) {
+        MoviesListFragmentDirections.DetailAction action = MoviesListFragmentDirections.detailAction().setFilmId(itemId);
+        NavHostFragment.findNavController(this).navigate(action);
     }
 
     @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        showDetails(position);
-    }
-
-    /**
-     * Helper function to show the details of a selected item, either by
-     * displaying a fragment in-place in the current UI, or starting a
-     * whole new activity in which it is displayed.
-     */
-    void showDetails(int index) {
-        curCheckPosition = index;
-        String description = model.films.getValue().get(index).openingCrawl;
-
-
-        if (dualPane) {
-            // We can display everything in-place with fragments, so update
-            // the list to highlight the selected item and show the data.
-            getListView().setItemChecked(index, true);
-
-            // Check what fragment is currently shown, replace if needed.
-            DetailsFragment details = (DetailsFragment) getFragmentManager().findFragmentById(R.id.details);
-            if (details == null || details.getShownIndex() != index) {
-                // Make new fragment to show this selection.
-                details = DetailsFragment.newInstance(index);
-
-                // Execute a transaction, replacing any existing fragment
-                // with this one inside the frame.
-                FragmentTransaction ft = getFragmentManager().beginTransaction();
-                // if (index == 0) {
-                    ft.replace(R.id.details, details);
-                // } else {
-                    //ft.replace(R.id.a_item, details);
-                // }
-                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-                ft.commit();
-            }
-
-        } else {
-            // Otherwise we need to launch a new activity to display
-            // the dialog fragment with selected text.
-            Intent intent = new Intent(getActivity(), DisplayMessageActivity.class);
-            intent.putExtra(MainActivity.EXTRA_MESSAGE, description);
-
-            startActivity(intent);
-        }
+    public void dump(@NonNull String prefix, @Nullable FileDescriptor fd, @NonNull PrintWriter writer, @Nullable String[] args) {
+        super.dump(prefix, fd, writer, args);
     }
 }
